@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and fill in the required values.
+# admin_project_id:  openstack project show admin -f value -c id
+
+auth_url             = "http://KEYSTONE_HOST:5000"
+admin_password       = "changeme"
+admin_project_id     = "paste-admin-project-uuid"
+nfs_export           = "10.0.0.5:/exports/tvault"   # NFS share must already exist & be mountable by the T4O datamover
+image_name           = "cirros"                     # match a Glance image in your cloud (e.g. cirros-0.6.2)
+
+# Optional — override only if your cloud differs from the defaults
+# flavor_name           = "m1.tiny"   # must exist in the cloud (RHOSO/Canonical may differ)
+# member_role_name      = "member"    # older clouds: "_member_"
+# external_network_name = "public"
+# admin_username        = "admin"
+# admin_project_name    = "admin"
+# domain_name           = "Default"
+
+# Trust prerequisite for T4O workload create. Set true (admin only) to have the
+# module grant the auth user the trustee roles. Match trustee_roles to WLM's
+# trustee_role config and to what your cloud actually has.
+# manage_trustee_roles = true
+# trustee_roles        = ["_member_", "creator"]   # secure-RBAC clouds: ["member", "creator"]; "creator" needs Barbican

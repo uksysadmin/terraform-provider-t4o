@@ -1,0 +1,36 @@
+# ADMIN stack — run once as cloud-admin.
+# admin_project_id:  openstack project show admin -f value -c id
+
+auth_url         = "http://KEYSTONE_HOST:5000"
+admin_password   = "changeme"
+admin_project_id = "paste-admin-project-uuid"
+# Backup target: NFS (default) or S3. For S3, creds are stored in Barbican automatically.
+backup_target_type = "nfs"
+nfs_export         = "10.0.0.5:/exports/tvault" # must already exist & be mountable by the T4O datamover (type=nfs)
+# backup_target_type = "s3"                       # MinIO or AWS
+# s3_endpoint_url    = "http://10.0.0.5:9000"     # MinIO; "https://s3.amazonaws.com" for AWS
+# s3_bucket          = "trilio-backups"           # must already exist
+# s3_region          = "us-east-1"
+# s3_access_key      = "AKIA..."                  # stored in Barbican (sensitive)
+# s3_secret_key      = "..."                       # stored in Barbican (sensitive)
+
+# Tenants to onboard (demo: creates project/user/VM for each).
+tenants = {
+  "demo-tenant-a" = { subnet_cidr = "10.20.1.0/24" }
+  "demo-tenant-b" = { subnet_cidr = "10.20.2.0/24" }
+}
+
+# Roles granted to each tenant user — must already exist in Keystone.
+# tenant_roles = ["backup_admin", "_member_", "creator"]   # secure-RBAC: ["backup_admin", "member", "creator"]
+
+# Onboarding existing tenants instead of creating them:
+# manage_projects = false
+# tenants = {
+#   "acme" = { project_id = "<uuid>", user_id = "<uuid>" }
+# }
+
+# Optional cloud overrides
+# image_name       = "cirros"
+# flavor_name      = "m1.tiny"
+# member_role_name = "member"
+# admin_username   = "admin"
