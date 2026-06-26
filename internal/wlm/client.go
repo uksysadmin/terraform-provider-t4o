@@ -744,7 +744,7 @@ func (c *Client) DeleteAllowedQuota(ctx context.Context, id string) error {
 // -----------------------------------------------------------------------
 
 func (c *Client) CreateRestore(ctx context.Context, req RestoreRequest) (*Restore, error) {
-	resp, err := c.do(ctx, http.MethodPost, "/restores", createRestoreBody{Restore: req})
+	resp, err := c.do(ctx, http.MethodPost, "/snapshots/"+req.SnapshotID+"/restores", createRestoreBody{Restore: req})
 	if err != nil {
 		return nil, err
 	}
