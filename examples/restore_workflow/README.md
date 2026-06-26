@@ -29,7 +29,13 @@ terraform apply -target=t4o_restore.dr_restore
 ```
 *(Wait for the restore to complete...)*
 
-#### 4. Adopt the State
+#### 4. Clear the Dead State
+Because the original VM was deleted in OpenStack but still exists in your local Terraform state file, Terraform will try to recreate it from scratch. You must tell Terraform to "forget" the old VM so it is allowed to adopt the new one.
+```bash
+terraform state rm openstack_compute_instance_v2.example_vm
+```
+
+#### 5. Adopt the State
 Now, uncomment the dynamic `import` block and the `data.t4o_restore_details` source (Step 3 in the file).
 
 Run a standard apply:
