@@ -336,3 +336,33 @@ type SettingItem struct {
 type settingsBody struct {
 	Settings []SettingItem `json:"settings"`
 }
+
+// -----------------------------------------------------------------------
+// Restores
+// -----------------------------------------------------------------------
+
+type Restore struct {
+	ID          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	Description string                   `json:"description,omitempty"`
+	SnapshotID  string                   `json:"snapshot_id"`
+	RestoreType string                   `json:"restore_type,omitempty"`
+	Status      string                   `json:"status,omitempty"`
+	Instances   []map[string]interface{} `json:"instances,omitempty"`
+}
+
+type RestoreRequest struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description,omitempty"`
+	SnapshotID  string                 `json:"snapshot_id"`
+	Type        string                 `json:"type,omitempty"`
+	Options     map[string]interface{} `json:"options,omitempty"`
+}
+
+type createRestoreBody struct {
+	Restore RestoreRequest `json:"restore"`
+}
+
+type restoreResponse struct {
+	Restore Restore `json:"restore"`
+}

@@ -738,3 +738,87 @@ func (c *Client) DeleteAllowedQuota(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+// -----------------------------------------------------------------------
+// Restores
+// -----------------------------------------------------------------------
+
+func (c *Client) CreateRestore(ctx context.Context, req RestoreRequest) (*Restore, error) {
+	resp, err := c.do(ctx, http.MethodPost, "/restores", createRestoreBody{Restore: req})
+	if err != nil {
+		return nil, err
+	}
+	b, _ := readBody(resp)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("WLM API returned %d: %s", resp.StatusCode, string(b))
+	}
+	var out restoreResponse
+	if err := json.Unmarshal(b, &out); err != nil {
+		return nil, fmt.Errorf("decode restore: %w", err)
+	}
+	return &out.Restore, nil
+}
+
+func (c *Client) GetRestore(ctx context.Context, id string) (*Restore, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/restores/"+id, nil)
+	if err != nil {
+		return nil, err
+	}
+	b, _ := readBody(resp)
+	if is404(resp) {
+		return nil, nil
+	}
+	if err := checkStatus(resp, b, http.StatusOK); err != nil {
+		return nil, err
+	}
+	var out restoreResponse
+	if err := json.Unmarshal(b, &out); err != nil {
+		return nil, fmt.Errorf("decode restore: %w", err)
+	}
+	return &out.Restore, nil
+}
+
+func (c *Client) DeleteRestore(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, http.MethodDelete, "/restores/"+id, nil)
+	if err != nil {
+		return err
+	}
+	b, _ := readBody(resp)
+	if is404(resp) {
+		return nil
+	}
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusAccepted {
+		return nil
+	}
+	return checkStatus(resp, b, http.StatusOK)
+}
+
+func (c *Client) PollRestore(ctx context.Context, id string, timeout time.Duration) (*Restore, error) {
+	deadline := time.Now().Add(timeout)
+	for {
+		if time.Now().After(deadline) {
+			return nil, fmt.Errorf("timed out waiting for restore %s to complete", id)
+		}
+
+		res, err := c.GetRestore(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if res == nil {
+			return nil, fmt.Errorf("restore %s not found while polling", id)
+		}
+
+		switch res.Status {
+		case "available":
+			return res, nil
+		case "error":
+			return nil, fmt.Errorf("restore %s entered error state", id)
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(15 * time.Second):
+		}
+	}
+}

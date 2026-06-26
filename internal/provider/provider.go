@@ -150,6 +150,7 @@ func (p *TrilioVaultProvider) Resources(_ context.Context) []func() resource.Res
 		NewWorkloadPolicyResource,
 		NewProjectQuotaResource,
 		NewSettingResource,
+		NewRestoreResource,
 	}
 }
 
@@ -161,6 +162,7 @@ func (p *TrilioVaultProvider) DataSources(_ context.Context) []func() datasource
 		NewLicenseDataSource,
 		NewQuotaDataSource,
 		NewQuotaTypesDataSource,
+		NewRestoreDataSource,
 	}
 }
 
