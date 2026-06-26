@@ -44,16 +44,27 @@ End-to-end tested on Kolla Flamingo 2025.2 (the Trilio-supported release).
 git clone https://github.com/trilio-demo/terraform-provider-t4o.git
 cd terraform-provider-t4o && make install
 
-# 2. Try the bundled end-to-end example (cloud-admin): 2 projects + VMs, a backup target,
+# 2. Authenticate the way you already do with OpenStack — source your openrc.
+#    Both the t4o and openstack providers read the standard OS_* variables, so
+#    credentials never touch your Terraform files.
+source ~/openrc.sh                              # sets OS_AUTH_URL, OS_USERNAME, OS_PASSWORD, OS_PROJECT_ID, …
+
+# 3. Try the bundled end-to-end example (cloud-admin): 2 projects + VMs, a backup target,
 #    a shared policy, and a workload per project — all in one apply.
 cd examples/demo
-cp terraform.tfvars.example terraform.tfvars   # fill in your cloud creds + nfs_export
+cp terraform.tfvars.example terraform.tfvars   # only non-credential inputs (nfs_export, image_name)
 terraform init && terraform apply
 ```
 
-`examples/` has three shapes: [`demo/`](./examples/demo) (everything in one apply — start here),
-[`admin/`](./examples/admin) + [`tenant/`](./examples/tenant) (the realistic multi-tenant split,
-run by different credentials). See [`examples/README.md`](./examples/README.md).
+> **Credentials come from the environment.** The provider reads `OS_AUTH_URL`, `OS_USERNAME`,
+> `OS_PASSWORD`, `OS_PROJECT_ID`, and `OS_USER_DOMAIN_NAME` — so `source openrc.sh` is all you need.
+> No passwords in `.tf` or `.tfvars`. (You can still set them explicitly if you prefer.)
+
+`examples/` has three shapes. **As a regular project user**, [`tenant/`](./examples/tenant) is your
+path — it just creates workloads, no admin rights. [`admin/`](./examples/admin) is the one-time
+cloud-admin setup (shared target, policy, role grants), and [`demo/`](./examples/demo) bundles
+everything into a single admin apply to see the provider work end to end. See
+[`examples/README.md`](./examples/README.md).
 
 ---
 
@@ -110,11 +121,26 @@ terraform {
 
 ## Provider Configuration
 
+The provider reads the standard OpenStack `OS_*` environment variables, so after `source openrc.sh`
+the provider block can be **empty**:
+
+```hcl
+# Recommended: credentials from the environment (source your openrc first).
+provider "t4o" {}
+```
+
+It picks up `OS_AUTH_URL`, `OS_USERNAME`, `OS_PASSWORD`, `OS_PROJECT_ID`, and
+`OS_USER_DOMAIN_NAME` (default domain `Default`). This keeps secrets out of your configuration —
+the recommended practice for OpenStack + Terraform.
+
+If you'd rather be explicit (e.g. managing several clouds in one config), every value can be set
+directly and overrides the environment:
+
 ```hcl
 provider "t4o" {
   auth_url    = "http://<keystone-host>:5000"
-  username    = "admin"
-  password    = var.os_password
+  username    = "backup-user"          # any project user with the backup role — admin not required
+  password    = var.os_password        # supply via TF_VAR_os_password, not plaintext
   project_id  = "<project-uuid>"
   domain_name = "Default"
 }
@@ -124,10 +150,10 @@ The provider discovers the WLM endpoint automatically from the Keystone service 
 
 | Argument | Description |
 |---|---|
-| `auth_url` | Keystone v3 endpoint |
-| `username` | OpenStack username |
-| `password` | OpenStack password (use a variable, not plaintext) |
-| `project_id` | Project UUID to scope operations to |
+| `auth_url` | Keystone v3 endpoint (or `OS_AUTH_URL`) |
+| `username` | OpenStack username (or `OS_USERNAME`) — a normal project user; admin is not required |
+| `password` | OpenStack password (or `OS_PASSWORD`; use a variable, never plaintext) |
+| `project_id` | Project UUID to scope operations to (or `OS_PROJECT_ID`) |
 | `domain_name` | Identity domain (default: `Default`) |
 
 ---

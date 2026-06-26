@@ -1,9 +1,10 @@
 # ADMIN stack — run once as cloud-admin.
-# admin_project_id:  openstack project show admin -f value -c id
+#
+# CREDENTIALS COME FROM YOUR ENVIRONMENT — don't put them here.
+# Source a cloud-admin openrc first (this stack creates projects + role grants):
+#     source ~/admin-openrc.sh    # sets OS_AUTH_URL, OS_USERNAME, OS_PASSWORD, OS_PROJECT_ID, …
+# Both the openstack and t4o providers read those OS_* variables automatically.
 
-auth_url         = "http://KEYSTONE_HOST:5000"
-admin_password   = "changeme"
-admin_project_id = "paste-admin-project-uuid"
 # Backup target: NFS (default) or S3. For S3, creds are stored in Barbican automatically.
 backup_target_type = "nfs"
 nfs_export         = "10.0.0.5:/exports/tvault" # must already exist & be mountable by the T4O datamover (type=nfs)

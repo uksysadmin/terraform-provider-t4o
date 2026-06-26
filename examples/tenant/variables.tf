@@ -1,23 +1,27 @@
 # ── Tenant credentials (this tenant's own user, scoped to its project) ───────
 variable "auth_url" {
-  description = "OpenStack Keystone endpoint."
+  description = "OpenStack Keystone endpoint. Omit to use OS_AUTH_URL from this tenant's sourced openrc."
   type        = string
+  default     = null
 }
 
 variable "tenant_username" {
-  description = "This tenant's username (holds the trust role(s); member of the project)."
+  description = "This tenant's username (holds the trust role(s); member of the project). Omit to use OS_USERNAME."
   type        = string
+  default     = null
 }
 
 variable "tenant_password" {
-  description = "This tenant's password."
+  description = "This tenant's password. Omit to use OS_PASSWORD from this tenant's sourced openrc."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "tenant_project_id" {
-  description = "This tenant's project UUID (admin output tenants[<name>].project_id)."
+  description = "This tenant's project UUID (admin output tenants[<name>].project_id). Omit to use OS_PROJECT_ID."
   type        = string
+  default     = null
 }
 
 variable "domain_name" {

@@ -1,30 +1,33 @@
 # ── Cloud connection (admin) ─────────────────────────────────────────────────
 variable "auth_url" {
-  description = "OpenStack Keystone endpoint, e.g. http://10.0.0.1:5000"
+  description = "OpenStack Keystone endpoint. Omit to use OS_AUTH_URL from your sourced openrc."
   type        = string
+  default     = null
 }
 
 variable "admin_username" {
-  description = "Cloud-admin username."
+  description = "Cloud-admin username. Omit to use OS_USERNAME."
   type        = string
-  default     = "admin"
+  default     = null
 }
 
 variable "admin_password" {
-  description = "Cloud-admin password."
+  description = "Cloud-admin password. Omit to use OS_PASSWORD from your sourced openrc."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "admin_project_id" {
-  description = "UUID of the admin project (for T4O provider scoping)."
+  description = "UUID of the admin project (for T4O provider scoping). Omit to use OS_PROJECT_ID."
   type        = string
+  default     = null
 }
 
 variable "admin_project_name" {
-  description = "Admin project name (tenant_name for the openstack provider)."
+  description = "Admin project name (tenant_name for the openstack provider). Omit to use OS_PROJECT_NAME."
   type        = string
-  default     = "admin"
+  default     = null
 }
 
 variable "domain_name" {
