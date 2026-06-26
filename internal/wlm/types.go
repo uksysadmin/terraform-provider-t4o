@@ -354,7 +354,7 @@ type Restore struct {
 type RestoreRequest struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description,omitempty"`
-	SnapshotID  string                 `json:"snapshot_id"`
+	SnapshotID  string                 `json:"-"`
 	Type        string                 `json:"type,omitempty"`
 	Options     map[string]interface{} `json:"options,omitempty"`
 }
