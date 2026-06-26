@@ -323,6 +323,30 @@ resource "t4o_setting" "notify_email" {
 
 ---
 
+### `t4o_restore`
+
+Manages a TrilioVault workload restore operation. This is most commonly used in Disaster Recovery scenarios to trigger a restore and adopt the resulting VMs into Terraform state.
+
+```hcl
+resource "t4o_restore" "dr_restore" {
+  name        = "dr-failover-restore"
+  description = "One-click restore triggered via Terraform"
+  snapshot_id = "aa881fac-7189-4c9e-b18b-db508fc5af1f"
+  type        = "oneclick"
+}
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `name` | yes | Restore name (forces replacement if changed) |
+| `snapshot_id` | yes | UUID of the snapshot to restore (forces replacement if changed) |
+| `description` | no | Restore description (forces replacement if changed) |
+| `type` | no | Restore type: `oneclick` (default), `selective`, or `inplace` (forces replacement if changed) |
+
+> **Note:** A restore is inherently a one-time operation. Updating the resource's properties in Terraform will force a recreation, triggering a brand-new restore.
+
+---
+
 ## Data Sources
 
 | Data source | Description |
@@ -333,6 +357,7 @@ resource "t4o_setting" "notify_email" {
 | `t4o_license` | Returns current T4O license info |
 | `t4o_quota` | Returns backup quota for the project |
 | `t4o_quota_types` | Lists available backup quota types (use a `quota_types[*].id` as `t4o_project_quota.quota_type_id`) |
+| `t4o_restore_details` | Retrieves details about a restore operation, crucially including the mapped IDs of the `restored_instances` to enable dynamic state adoption |
 
 ---
 
