@@ -30,10 +30,10 @@ provider "t4o" {
 }
 
 # ── Trust prerequisite (opt-in) ──────────────────────────────────────────────
-# T4O builds a Keystone trust on workload create and validates that the auth user
-# holds EVERY role in WLM's `trustee_role` config (stock default: "_member_, creator").
-# `creator` only exists where Barbican is deployed; `_member_` is legacy. When the
-# auth user is missing one, workload create hard-fails with 500 "Invalid roles [...]".
+# T4O builds a Keystone trust on workload create and expects the auth user to hold
+# the roles in WLM's `trustee_role` config (stock default: "_member_, creator").
+# `creator` exists where Barbican is deployed; `_member_` is legacy. Make sure the
+# auth user holds these roles before creating workloads.
 # Set manage_trustee_roles=true to have the module grant the auth (admin) user those
 # roles on its own project. Requires admin and the roles to already exist in Keystone —
 # if a role is absent, create it first or trim WLM's trustee_role to match the cloud.

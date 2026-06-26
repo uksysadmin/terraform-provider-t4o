@@ -181,8 +181,8 @@ func (r *WorkloadResource) Create(ctx context.Context, req resource.CreateReques
 	if scheduleEnabled(&plan, ctx) {
 		resp.Diagnostics.AddWarning(
 			"Cloud trust required for scheduled backups",
-			"jobschedule.enabled is true. Ensure a Keystone trust (trustee role) exists for this project. "+
-				"Run the wlm_cloud_trust playbook; without it, scheduled backups will fail silently.",
+			"jobschedule.enabled is true. T4O uses a Keystone trust to run scheduled backups for this project. "+
+				"Ensure the trust is configured (e.g. via the wlm_cloud_trust playbook) before relying on the schedule.",
 		)
 	}
 

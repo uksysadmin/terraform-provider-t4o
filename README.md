@@ -68,14 +68,14 @@ run by different credentials). See [`examples/README.md`](./examples/README.md).
 
 ## Cloud prerequisites
 
-Have these in place on the OpenStack cloud before you run anything, or you'll hit cryptic `403`/`500`s:
+Have these in place on the OpenStack cloud before you run anything:
 
 - **T4O 6.2 deployed** with the WLM service registered in Keystone (service type `workloads`).
-- **A valid, unexpired T4O license** applied — without it every workload create returns `500 "License not found"`.
-- **Keystone trust roles**: the user that creates workloads must hold the roles in WLM's `trustee_role`
-  (typically `creator`; some clouds also `member`). Missing → `500 Invalid roles […]` at workload create.
-- **RBAC role** for non-admin users: T4O's custom policy needs `backup_admin` to create workloads
-  (plain `member` is denied). Skip if your cloud runs the default permissive policy.
+- **A valid, unexpired T4O license** applied before creating workloads.
+- **Keystone trust roles**: the user that creates workloads should hold the roles in WLM's `trustee_role`
+  (typically `creator`; some clouds also `member`). T4O uses a Keystone trust to run scheduled backups on the user's behalf.
+- **RBAC role** for non-admin users: T4O's custom policy grants workload management via the `backup_admin` role.
+  Not required if your cloud runs the default permissive policy.
 - **Barbican** (key-manager) deployed **only if you'll use S3** backup targets — the S3 `secret_ref` lives there.
 
 ---
@@ -223,7 +223,7 @@ resource "t4o_workload" "web_tier" {
 | `secret_uuid` | no | Barbican secret UUID with the encryption passphrase (required when `encryption = true`) — create it with `openstack_keymanager_secret_v1` |
 | `jobschedule` | no | Inline schedule block (see above) |
 
-> **Note:** T4O requires a Keystone trust for unattended scheduled backups. Run the `wlm_cloud_trust` playbook before enabling a schedule, or snapshots will fail silently.
+> **Note:** T4O uses a Keystone trust to run unattended scheduled backups. Ensure the trust is configured (e.g. via the `wlm_cloud_trust` playbook) before enabling a schedule.
 
 ---
 
@@ -294,7 +294,7 @@ resource "t4o_setting" "notify_email" {
 | `category` | no | Setting category |
 
 > **Reserved settings.** WLM-managed settings (`trust_id`, `cloud_unique_id`, `backup_target_id`)
-> are rejected by this resource — managing them from Terraform can silently break scheduled backups.
+> are rejected by this resource, since they're maintained by T4O itself and are not meant to be set by hand.
 
 ---
 
@@ -331,12 +331,12 @@ See [`examples/`](./examples/) for a complete working configuration covering a b
 
 ---
 
-## Known Limitations
+## Scope & operational notes
 
-- **Snapshots and restores** are async imperative jobs and are out of scope for this provider. Use the T4O CLI, Horizon plugin, or DMS API directly.
-- **`terraform import`** registers the resource and never crashes, but a follow-up `plan` may show a diff: WLM doesn't echo back every field (e.g. `jobschedule`/`secret_ref`) the way it accepts them, so imported state doesn't fully round-trip. Expected — reconcile by writing the config to match.
-- **A policy already attached to a workload can't be updated** — WLM returns `500 "… assigned to workloads"`. Detach, edit, re-attach (or edit the policy before assigning).
-- The WLM API returns `backup_targets` (plural) even for single-object responses — the provider handles this transparently.
+- **Snapshots and restores** are on-demand operations and are out of scope for this provider by design — it manages declarative configuration (targets, workloads, policies, quotas, settings). Trigger and manage backup runs with the T4O CLI, Horizon plugin, or DMS API.
+- **`terraform import`** brings a resource under management; a follow-up `plan` may show a diff for fields the API doesn't echo back identically (e.g. `jobschedule`, `secret_ref`). Reconcile by writing the config to match the imported resource.
+- **Update a policy before assigning it** to workloads. To change a policy that's already assigned, detach it, edit, and re-attach.
+- Single-object and list responses are normalized transparently by the provider.
 
 ---
 

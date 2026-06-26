@@ -24,11 +24,11 @@ admin/ (admin)  ──outputs──►  tenant/ (tenant A creds)
 
 ## Two hard prerequisites T4O imposes
 
-1. **RBAC role.** T4O's custom policy denies plain `member` users. Each tenant user needs the `backup_admin` role on their project to create/manage workloads (`restore_only` for read+restore). Create the custom roles once: `openstack role create backup_admin restore_only`.
+1. **RBAC role.** Under T4O's custom policy, workload management is granted via the `backup_admin` role on the project (`restore_only` for read+restore). Create the custom roles once: `openstack role create backup_admin restore_only`, then assign them to each tenant user.
 
-2. **Keystone trust roles.** On workload create, WLM builds a trust and validates the user holds **every** role in WLM's `trustee_role` config (stock default `_member_, creator`). `creator` exists only where Barbican is deployed; secure-RBAC clouds use `member` not `_member_`. Match `tenant_roles`/`trustee_role` to what your cloud actually has, and grant them to the tenant user (the admin stack does this via `modules/t4o-tenant-grants`).
+2. **Keystone trust roles.** On workload create, T4O builds a Keystone trust and expects the user to hold the roles in WLM's `trustee_role` config (stock default `_member_, creator`). `creator` exists where Barbican is deployed; secure-RBAC clouds use `member` rather than `_member_`. Match `tenant_roles`/`trustee_role` to your cloud and grant them to the tenant user (the admin stack does this via `modules/t4o-tenant-grants`).
 
-If either is missing you get a `500 Invalid roles [...]` (trust) or a `403` (RBAC) at workload create.
+Both should be in place before workload create so the RBAC check and trust build succeed.
 
 ## Run order
 
