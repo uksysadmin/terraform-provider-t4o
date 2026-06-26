@@ -103,6 +103,8 @@ func (r *RestoreResource) Create(ctx context.Context, req resource.CreateRequest
 		Options: map[string]interface{}{
 			"type":         "openstack",
 			"restore_type": restoreType,
+			"openstack":    map[string]interface{}{},
+			"vmware":       map[string]interface{}{},
 		},
 	}
 	if restoreType == "oneclick" {
