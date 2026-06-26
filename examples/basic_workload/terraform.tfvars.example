@@ -1,0 +1,15 @@
+# Standard OpenStack environment variables (like OS_PROJECT_NAME, OS_USERNAME, 
+# OS_PASSWORD, etc.) are automatically picked up by the providers, so you 
+# typically do not need to define auth credentials here.
+
+# UUID of the image used for the example VM
+image_id = "paste-image-uuid-here"
+
+# UUID of the flavor used for the example VM
+flavor_id = "paste-flavor-uuid-here"
+
+# UUID of the network used for the example VM
+network_id = "paste-network-uuid-here"
+
+# Optional: UUID of an existing backup target. If omitted, the default target for the project is used.
+# backup_target_id = "paste-backup-target-uuid-here"
