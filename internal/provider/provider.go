@@ -31,7 +31,9 @@ type providerModel struct {
 	Username       types.String `tfsdk:"username"`
 	Password       types.String `tfsdk:"password"`
 	ProjectID      types.String `tfsdk:"project_id"`
+	ProjectName    types.String `tfsdk:"project_name"`
 	DomainName     types.String `tfsdk:"domain_name"`
+	DomainID       types.String `tfsdk:"domain_id"`
 	WLMEndpoint    types.String `tfsdk:"wlm_endpoint"`
 	WLMServiceType types.String `tfsdk:"wlm_service_type"`
 	Insecure       types.Bool   `tfsdk:"insecure"`
@@ -61,11 +63,19 @@ func (p *TrilioVaultProvider) Schema(_ context.Context, _ provider.SchemaRequest
 			},
 			"project_id": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "OpenStack project (tenant) UUID. Falls back to `OS_PROJECT_ID`.",
+				MarkdownDescription: "OpenStack project (tenant) UUID. Falls back to `OS_PROJECT_ID` or `OS_TENANT_ID`.",
+			},
+			"project_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "OpenStack project (tenant) name. Falls back to `OS_PROJECT_NAME` or `OS_TENANT_NAME`.",
 			},
 			"domain_name": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "OpenStack domain name. Falls back to `OS_USER_DOMAIN_NAME` or `OS_DOMAIN_NAME`. Defaults to `Default`.",
+				MarkdownDescription: "OpenStack domain name. Falls back to `OS_USER_DOMAIN_NAME`, `OS_PROJECT_DOMAIN_NAME`, or `OS_DOMAIN_NAME`. Defaults to `Default`.",
+			},
+			"domain_id": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "OpenStack domain ID. Falls back to `OS_USER_DOMAIN_ID`, `OS_PROJECT_DOMAIN_ID`, or `OS_DOMAIN_ID`.",
 			},
 			"wlm_endpoint": schema.StringAttribute{
 				Optional:            true,
@@ -93,9 +103,11 @@ func (p *TrilioVaultProvider) Configure(ctx context.Context, req provider.Config
 	authURL := envOrVal(cfg.AuthURL, "OS_AUTH_URL")
 	username := envOrVal(cfg.Username, "OS_USERNAME")
 	password := envOrVal(cfg.Password, "OS_PASSWORD")
-	projectID := envOrVal(cfg.ProjectID, "OS_PROJECT_ID")
-	domainName := envOrVal(cfg.DomainName, "OS_USER_DOMAIN_NAME", "OS_DOMAIN_NAME")
-	if domainName == "" {
+	projectID := envOrVal(cfg.ProjectID, "OS_PROJECT_ID", "OS_TENANT_ID")
+	projectName := envOrVal(cfg.ProjectName, "OS_PROJECT_NAME", "OS_TENANT_NAME")
+	domainName := envOrVal(cfg.DomainName, "OS_USER_DOMAIN_NAME", "OS_PROJECT_DOMAIN_NAME", "OS_DOMAIN_NAME")
+	domainID := envOrVal(cfg.DomainID, "OS_USER_DOMAIN_ID", "OS_PROJECT_DOMAIN_ID", "OS_DOMAIN_ID")
+	if domainName == "" && domainID == "" {
 		domainName = "Default"
 	}
 
@@ -104,7 +116,9 @@ func (p *TrilioVaultProvider) Configure(ctx context.Context, req provider.Config
 		Username:       username,
 		Password:       password,
 		ProjectID:      projectID,
+		ProjectName:    projectName,
 		DomainName:     domainName,
+		DomainID:       domainID,
 		WLMEndpoint:    cfg.WLMEndpoint.ValueString(),
 		WLMServiceType: cfg.WLMServiceType.ValueString(),
 		Insecure:       cfg.Insecure.ValueBool(),

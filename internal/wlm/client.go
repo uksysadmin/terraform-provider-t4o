@@ -13,6 +13,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/tokens"
 )
 
 // Config holds provider-level authentication and endpoint configuration.
@@ -41,8 +42,8 @@ type Client struct {
 // NewClient authenticates with Keystone, discovers the WLM endpoint from the
 // service catalog, and returns a ready-to-use Client.
 func NewClient(ctx context.Context, cfg Config) (*Client, error) {
-	if cfg.ProjectID == "" {
-		return nil, fmt.Errorf("project_id is required")
+	if cfg.ProjectID == "" && cfg.ProjectName == "" {
+		return nil, fmt.Errorf("project_id or project_name is required")
 	}
 
 	opts := gophercloud.AuthOptions{
@@ -70,6 +71,23 @@ func NewClient(ctx context.Context, cfg Config) (*Client, error) {
 	providerClient, err := openstack.AuthenticatedClient(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("keystone auth failed: %w", err)
+	}
+
+	if cfg.ProjectID == "" {
+		// Try to extract project ID from the v3 token result
+		type projectExtractor interface {
+			ExtractProject() (*tokens.Project, error)
+		}
+		if ext, ok := providerClient.GetAuthResult().(projectExtractor); ok {
+			proj, err := ext.ExtractProject()
+			if err == nil && proj != nil {
+				cfg.ProjectID = proj.ID
+			}
+		}
+		
+		if cfg.ProjectID == "" {
+			return nil, fmt.Errorf("project_id could not be determined from the auth token")
+		}
 	}
 
 	var baseURL string

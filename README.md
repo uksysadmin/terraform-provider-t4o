@@ -26,9 +26,8 @@ End-to-end tested on Kolla Flamingo 2025.2 (the Trilio-supported release).
 **Governance & config**
 - Per-project backup **quotas** (`t4o_project_quota`) and per-project **settings** (`t4o_setting`, e.g. notification email) as code
 
-**Multi-tenant**
-- Admin layer (projects, roles, shared target + policy) and tenant layer (each tenant manages only its own workloads)
-- Custom RBAC: `backup_admin` authorized, plain `member` denied
+**Role-Based Access Control (RBAC)**
+- The provider delegates all permission checks natively to OpenStack. If a user lacks permission for an action (e.g., creating a shared policy), the API returns a 403 Forbidden and Terraform fails cleanly.
 
 **Guarantees**
 - Idempotent `plan` (no changes on a second run) and clean `destroy` (no orphans)
@@ -44,16 +43,14 @@ End-to-end tested on Kolla Flamingo 2025.2 (the Trilio-supported release).
 git clone https://github.com/trilio-demo/terraform-provider-t4o.git
 cd terraform-provider-t4o && make install
 
-# 2. Try the bundled end-to-end example (cloud-admin): 2 projects + VMs, a backup target,
+# 2. Try the bundled end-to-end example: 2 projects + VMs, a backup target,
 #    a shared policy, and a workload per project — all in one apply.
 cd examples/demo
 cp terraform.tfvars.example terraform.tfvars   # fill in your cloud creds + nfs_export
 terraform init && terraform apply
 ```
 
-`examples/` has three shapes: [`demo/`](./examples/demo) (everything in one apply — start here),
-[`admin/`](./examples/admin) + [`tenant/`](./examples/tenant) (the realistic multi-tenant split,
-run by different credentials). See [`examples/README.md`](./examples/README.md).
+See [`examples/README.md`](./examples/README.md) for more details.
 
 ---
 
@@ -115,7 +112,7 @@ provider "t4o" {
   auth_url    = "http://<keystone-host>:5000"
   username    = "admin"
   password    = var.os_password
-  project_id  = "<project-uuid>"
+  project_id  = "<project-uuid>"      # Or use project_name = "<project-name>"
   domain_name = "Default"
 }
 ```
@@ -124,11 +121,13 @@ The provider discovers the WLM endpoint automatically from the Keystone service 
 
 | Argument | Description |
 |---|---|
-| `auth_url` | Keystone v3 endpoint |
-| `username` | OpenStack username |
-| `password` | OpenStack password (use a variable, not plaintext) |
-| `project_id` | Project UUID to scope operations to |
-| `domain_name` | Identity domain (default: `Default`) |
+| `auth_url` | Keystone v3 endpoint. Falls back to `OS_AUTH_URL` |
+| `username` | OpenStack username. Falls back to `OS_USERNAME` |
+| `password` | OpenStack password (use a variable, not plaintext). Falls back to `OS_PASSWORD` |
+| `project_id` | Project UUID to scope operations to. Falls back to `OS_PROJECT_ID` or `OS_TENANT_ID` |
+| `project_name` | Project name to scope operations to. Falls back to `OS_PROJECT_NAME` or `OS_TENANT_NAME` |
+| `domain_name` | Identity domain name. Falls back to `OS_USER_DOMAIN_NAME`, `OS_PROJECT_DOMAIN_NAME`, or `OS_DOMAIN_NAME`. (default: `Default`) |
+| `domain_id` | Identity domain ID. Falls back to `OS_USER_DOMAIN_ID`, `OS_PROJECT_DOMAIN_ID`, or `OS_DOMAIN_ID` |
 
 ---
 
