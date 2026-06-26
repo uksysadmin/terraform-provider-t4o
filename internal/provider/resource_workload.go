@@ -357,6 +357,16 @@ func workloadModelToRequest(ctx context.Context, m *workloadModel) wlm.WorkloadR
 			RetentionDays:      int(s.RetentionDays.ValueInt64()),
 			SnapshotsToRetain:  int(s.SnapshotsToRetain.ValueInt64()),
 		}
+	} else if m.PolicyID.ValueString() == "" {
+		// WLM requires a valid jobschedule payload even if no schedule or policy is desired,
+		// otherwise its internal parser crashes (e.g., "Hourly interval must be a numeric value").
+		req.JobSchedule = &wlm.JobSchedule{
+			Enabled:            false,
+			Interval:           "24 hr", // API standard default
+			RetentionDays:      30,
+			SnapshotsToRetain:  30,
+			FullBackupInterval: -1,
+		}
 	}
 
 	return req
