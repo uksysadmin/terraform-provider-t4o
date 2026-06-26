@@ -1,19 +1,19 @@
 # Copy to terraform.tfvars and fill in the required values.
-# admin_project_id:  openstack project show admin -f value -c id
+#
+# CREDENTIALS COME FROM YOUR ENVIRONMENT — don't put them here.
+# This demo provisions projects + VMs, so source a *cloud-admin* openrc first:
+#     source ~/admin-openrc.sh    # sets OS_AUTH_URL, OS_USERNAME, OS_PASSWORD, OS_PROJECT_ID, …
+# Both the openstack and t4o providers read those OS_* variables automatically.
+# (You *can* still set auth_url/admin_username/admin_password/admin_project_id here
+#  to override the environment, but the openrc workflow keeps secrets out of git.)
 
-auth_url             = "http://KEYSTONE_HOST:5000"
-admin_password       = "changeme"
-admin_project_id     = "paste-admin-project-uuid"
-nfs_export           = "10.0.0.5:/exports/tvault"   # NFS share must already exist & be mountable by the T4O datamover
-image_name           = "cirros"                     # match a Glance image in your cloud (e.g. cirros-0.6.2)
+nfs_export = "10.0.0.5:/exports/tvault" # NFS share must already exist & be mountable by the T4O datamover
+image_name = "cirros"                   # match a Glance image in your cloud (e.g. cirros-0.6.2)
 
 # Optional — override only if your cloud differs from the defaults
 # flavor_name           = "m1.tiny"   # must exist in the cloud (RHOSO/Canonical may differ)
 # member_role_name      = "member"    # older clouds: "_member_"
 # external_network_name = "public"
-# admin_username        = "admin"
-# admin_project_name    = "admin"
-# domain_name           = "Default"
 
 # Trust prerequisite for T4O workload create. Set true (admin only) to have the
 # module grant the auth user the trustee roles. Match trustee_roles to WLM's

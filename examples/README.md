@@ -21,3 +21,29 @@ This design means you don't need to arbitrarily split your Terraform state into 
 2. **Keystone trust roles.** On workload create, T4O builds a Keystone trust and expects the user to hold the roles in WLM's `trustee_role` config (stock default `_member_, creator`). `creator` exists where Barbican is deployed; secure-RBAC clouds use `member` rather than `_member_`.
 
 Both should be in place before workload create so the RBAC check and trust build succeed.
+## Run order
+
+Credentials come from your environment in every stack — `source` the right openrc, then run.
+Nothing below puts a password in a file.
+
+```bash
+# 1. Admin (cloud-admin), once:
+source ~/admin-openrc.sh                        # OS_* for the cloud admin
+cd admin
+cp terraform.tfvars.example terraform.tfvars    # only nfs_export + tenant map (no creds)
+terraform init && terraform apply
+terraform output            # note policy_id, backup_target_name, tenants[*]
+
+# 2. Each tenant, with THAT tenant's own (non-admin) creds:
+source ~/tenant-a-openrc.sh                      # OS_* for this tenant's user
+cd ../tenant
+cp terraform.tfvars.example terraform.tfvars     # only the admin outputs (network_id, policy_id, …)
+terraform init && terraform apply
+```
+
+## Reusable modules (`modules/`)
+
+- [`t4o-tenant-grants`](./modules/t4o-tenant-grants) — admin-side; grants a tenant user the T4O + trustee roles on their project. Provider-less; the root passes the admin `openstack` provider.
+- [`t4o-tenant-backup`](./modules/t4o-tenant-backup) — tenant-side; creates workload(s) against a shared target (looked up by name) + a shared policy id. Provider-less; the root passes the tenant `t4o` provider.
+
+The `demo/` example keeps its own bundled `modules/` for the single-apply quickstart.

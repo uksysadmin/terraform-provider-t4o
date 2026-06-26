@@ -1,0 +1,19 @@
+# TENANT stack — one per tenant, run with THIS tenant's own (non-admin) credentials.
+#
+# CREDENTIALS COME FROM YOUR ENVIRONMENT — don't put them here.
+# Source this tenant's openrc first (no admin rights needed — just this project):
+#     source ~/tenant-a-openrc.sh   # sets OS_AUTH_URL, OS_USERNAME, OS_PASSWORD, OS_PROJECT_ID, …
+# Both providers read those OS_* variables automatically.
+#
+# The non-credential inputs below come from the admin stack outputs:
+#   cd ../admin && terraform output                  # policy_id, backup_target_id
+#   cd ../admin && terraform output -json tenants    # project_id, network_id per tenant
+
+network_id = "paste-tenant-network-uuid"
+
+policy_id        = "paste-policy_id-from-admin-output"
+backup_target_id = "paste-backup_target_id-from-admin-output"
+
+workload_name = "tenant-a-workload"
+image_name    = "cirros-0.6.2"
+flavor_name   = "m1.tiny"
