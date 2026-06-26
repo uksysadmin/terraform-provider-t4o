@@ -26,7 +26,7 @@ provider "t4o" {
   username    = var.admin_username
   password    = var.admin_password
   project_id  = var.admin_project_id
-  domain_name = var.domain_name
+  domain_nam = var.domain_name
 }
 
 # ── Trust prerequisite (opt-in) ──────────────────────────────────────────────

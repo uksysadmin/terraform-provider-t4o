@@ -105,10 +105,19 @@ func (p *TrilioVaultProvider) Configure(ctx context.Context, req provider.Config
 	password := envOrVal(cfg.Password, "OS_PASSWORD")
 	projectID := envOrVal(cfg.ProjectID, "OS_PROJECT_ID", "OS_TENANT_ID")
 	projectName := envOrVal(cfg.ProjectName, "OS_PROJECT_NAME", "OS_TENANT_NAME")
-	domainName := envOrVal(cfg.DomainName, "OS_USER_DOMAIN_NAME", "OS_PROJECT_DOMAIN_NAME", "OS_DOMAIN_NAME")
-	domainID := envOrVal(cfg.DomainID, "OS_USER_DOMAIN_ID", "OS_PROJECT_DOMAIN_ID", "OS_DOMAIN_ID")
-	if domainName == "" && domainID == "" {
+	domainName := envOrVal(cfg.DomainName, "OS_USER_DOMAIN_NAME", "OS_DOMAIN_NAME")
+	domainID := envOrVal(cfg.DomainID, "OS_USER_DOMAIN_ID", "OS_DOMAIN_ID")
+
+	// Gophercloud strictly requires exactly ONE of DomainID or DomainName.
+	if domainID != "" {
+		domainName = ""
+	} else if domainName == "" {
 		domainName = "Default"
+	}
+
+	// Similarly, prefer ProjectID over ProjectName to avoid any ambiguity.
+	if projectID != "" {
+		projectName = ""
 	}
 
 	wlmCfg := wlm.Config{
